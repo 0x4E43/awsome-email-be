@@ -9,6 +9,7 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	_ "github.com/mattn/go-sqlite3" // Import go-sqlite3 library
 )
 
@@ -31,6 +32,10 @@ func main() {
 	println("DB Connected: ", db)
 	e := echo.New()
 
+	e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
+		Format: "${time_unix} ${remote_ip} ${method} ${uri} ${status}\n",
+	  }))
+	  
 	var userAPI =  new(user.UserAPI)
 	userAPI.ConDB = db
 	//USER RELATED ENDPOINTS
