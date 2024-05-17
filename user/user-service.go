@@ -3,6 +3,8 @@ package user
 import (
 	"database/sql"
 	"log"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 
@@ -14,9 +16,13 @@ type User struct{
 
 func (user User) createUser(db *sql.DB) (*User, error){
 	log.Println("Adding user to DB")
-	var insertQuery = `INSERT INTO user_details (username, email, created_at)
-		VALUES($1, $2, CURRENT_TIMESTAMP)`;
-	row, err := db.Query(insertQuery, user.EmailId, user.Password)
+	var insertQuery = `INSERT INTO user_details (id, email, password, created_at)
+		VALUES(NULL,$1, $2, CURRENT_TIMESTAMP)`;
+	enc_pass, err := Encrypt_password(user.Password)
+	if err != nil{
+		return nil, err
+	}
+	row, err := db.Query(insertQuery, enc_pass, user.Password)
 	if err != nil {
 		log.Println("Exception while adding user: ", err.Error())
 		return nil, err
@@ -29,4 +35,15 @@ func (user User) createUser(db *sql.DB) (*User, error){
 		}
 	}
 	return &user, nil
+}
+
+//METHOD TO ENCRYPT STRING
+func Encrypt_password(pass string) (*string, error){
+	enc, err := bcrypt.GenerateFromPassword([]byte(pass), bcrypt.DefaultCost)
+	if err != nil {
+		log.Println("Error while encrypting password", err.Error())
+		return nil, err
+	}
+	retStr := string(enc) 
+	return &retStr, nil
 }
