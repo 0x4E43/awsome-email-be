@@ -36,7 +36,8 @@ func main() {
 	var userAPI =  new(user.UserAPI)
 	userAPI.ConDB = db
 	//USER RELATED ENDPOINTS
-	e.POST("/user/create", userAPI.UserLoginHandler)
+	e.POST("/user/create", userAPI.UserCreateHandler)
+	e.POST("/user/login", userAPI.UserLoginHandler)
 
 	e.GET("/", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Hello, World!")
