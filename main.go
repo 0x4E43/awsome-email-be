@@ -40,6 +40,11 @@ func main() {
 		Format: "${time_unix} ${remote_ip} ${method} ${uri} ${status}\n",
 	}))
 
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: []string{"*", "http://localhost:5173"},
+		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, echo.HeaderAuthorization},
+	}))
+
 	var userAPI = new(user.UserAPI)
 	userAPI.ConDB = db
 	//USER RELATED ENDPOINTS

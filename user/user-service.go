@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -80,14 +81,16 @@ func (user *User) ListAllUser(db *sql.DB) ([]User, error) {
 }
 
 // Security Related Utility Method
-var MY_SECRET = []byte("D2953AFCC7938B14DD1B969BB4535")
 
 func (user *User) ParseJwtToken(tokenString string) (*string, error) {
+	tokenString = strings.TrimSpace(tokenString)
+	log.Println("Token :", tokenString)
+	var MY_SECRET = "D2953AFCC7938B14DD1B969BB4535"
 	token, err := jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {
 		return []byte(MY_SECRET), nil
 	})
 	if err != nil {
-		log.Println("Error in parsing JWT")
+		log.Println("Error in parsing JWT : ", err.Error())
 		return nil, err
 	}
 
@@ -103,7 +106,7 @@ func (user *User) ParseJwtToken(tokenString string) (*string, error) {
 }
 
 func (user *User) Create_auth_token() (*string, error) {
-
+	var MY_SECRET = "D2953AFCC7938B14DD1B969BB4535"
 	claims := jwt.RegisteredClaims{
 		ExpiresAt: jwt.NewNumericDate(time.Now().Add(15 * 24 * time.Hour)), //For 15 days
 		IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -112,7 +115,7 @@ func (user *User) Create_auth_token() (*string, error) {
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-	token_str, err := token.SignedString(MY_SECRET)
+	token_str, err := token.SignedString([]byte(MY_SECRET))
 	if err != nil {
 		log.Println("Something went wrong while generating token ", err.Error())
 		return nil, err
