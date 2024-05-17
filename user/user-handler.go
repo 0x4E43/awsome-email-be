@@ -1,6 +1,7 @@
 package user
 
 import (
+	"0x4E43/email-app-be/cache"
 	"database/sql"
 	"encoding/json"
 	"log"
@@ -48,5 +49,20 @@ func (userApi *UserAPI)UserLoginHandler(c echo.Context) error{
 	if err != nil{
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Something went wrong"})
 	}
+	//set up cache for authorization
+	userEmail := dbUser.EmailId
+	cache.AddUserToCache(userEmail)
 	return c.JSON(http.StatusOK, map[string]string{"token": *token})
+}
+
+
+func (userApi *UserAPI)ListAllUserHandler(c echo.Context) error{
+	var user = User{}
+	var userList []User
+	userList, err := user.ListAllUser(userApi.ConDB)
+	if err != nil{
+		log.Println(" Exception while listing user : ", err.Error())
+		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Something went wrong"})
+	}
+	return c.JSON(http.StatusOK, map[string]any{"message": "List Sucessfull", "data": userList})
 }

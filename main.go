@@ -11,9 +11,7 @@ import (
 	"github.com/labstack/echo/v4"
 	_ "github.com/mattn/go-sqlite3" // Import go-sqlite3 library
 )
-func init(){
-	
-}
+
 func main() {
 
 	var server = db_utils.DBCon{}
@@ -38,6 +36,7 @@ func main() {
 	//USER RELATED ENDPOINTS
 	e.POST("/user/create", userAPI.UserCreateHandler)
 	e.POST("/user/login", userAPI.UserLoginHandler)
+	e.GET("/user/list-all", userAPI.ListAllUserHandler)
 
 	e.GET("/", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Hello, World!")

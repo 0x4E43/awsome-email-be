@@ -14,6 +14,7 @@ type User struct{
 	Id string `json:"id,omitempty"`
 	EmailId string `json:"emailId"`
 	Password string `json:"password"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 func (user *User) createUser(db *sql.DB) (*User, error){
@@ -24,7 +25,7 @@ func (user *User) createUser(db *sql.DB) (*User, error){
 	if err != nil{
 		return nil, err
 	}
-	row, err := db.Query(insertQuery, enc_pass, user.Password)
+	row, err := db.Query(insertQuery, user.EmailId, enc_pass)
 	if err != nil {
 		log.Println("Exception while adding user: ", err.Error())
 		return nil, err
@@ -56,6 +57,27 @@ func (user *User) CheckIfUserExist(db *sql.DB) (*User, error){
 }
 
 
+func (user *User) ListAllUser(db *sql.DB) ([]User, error){
+	sqlQuery := `SELECT email, created_at FROM user_details`;
+	
+	rows, err := db.Query(sqlQuery)
+
+	defer rows.Close()
+
+    var userList []User
+	if err != nil{
+		log.Println("Something went wrong while executing query: ", err.Error())
+	}
+	for rows.Next() {
+        var dbUser User
+        if err := rows.Scan(&dbUser.EmailId, &dbUser.CreatedAt); err != nil {
+            log.Println("Error scanning row: ", err.Error())
+            return nil, err
+        }
+        userList = append(userList, dbUser)
+    }
+	return userList, nil
+}
 // Security Related Utility Method
 
 
