@@ -44,6 +44,9 @@ func (userApi *UserAPI)UserLoginHandler(c echo.Context) error{
 	if !isAuthenticated{
 		return c.JSON(http.StatusUnauthorized, map[string]string{"message": "Invalid Creds"})
 	}
-	token := dbUser.Create_auth_token()
-	return c.JSON(http.StatusOK, map[string]string{"toke": token})
+	token, err := dbUser.Create_auth_token()
+	if err != nil{
+		return c.JSON(http.StatusInternalServerError, map[string]string{"message": "Something went wrong"})
+	}
+	return c.JSON(http.StatusOK, map[string]string{"token": *token})
 }

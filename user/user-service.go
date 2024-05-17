@@ -3,7 +3,9 @@ package user
 import (
 	"database/sql"
 	"log"
+	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -57,8 +59,24 @@ func (user *User) CheckIfUserExist(db *sql.DB) (*User, error){
 // Security Related Utility Method
 
 
-func (user *User) Create_auth_token() string{
-	return ""
+func (user *User) Create_auth_token() (*string, error){
+	
+	MY_SECRET := []byte("D2953AFCC7938B14DD1B969BB4535")
+
+	claims := jwt.RegisteredClaims{
+		ExpiresAt: jwt.NewNumericDate(time.Now().Add(15 * 24 * time.Hour)), //For 15 days
+		IssuedAt:  jwt.NewNumericDate(time.Now()),
+		Subject: user.EmailId,
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	token_str, err := token.SignedString(MY_SECRET)
+	if err != nil{
+		log.Println("Something went wrong while generating token ", err.Error())
+		return nil, err
+	}
+	return &token_str, nil
 }
 
 
