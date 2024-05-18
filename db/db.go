@@ -18,7 +18,7 @@ func (d *DBCon) CreateRequiredTables() error {
 	);`)
 
 	sqls = append(sqls, `CREATE TABLE IF NOT EXISTS email_configs (
-		id INT PRIMARY KEY,
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		smtp_host VARCHAR(50),
 		smtp_pass VARCHAR(100),
 		smtp_from VARCHAR(100),
