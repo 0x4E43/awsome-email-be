@@ -45,10 +45,20 @@ func main() {
 		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, echo.HeaderAuthorization},
 	}))
 
+	//disable CSRF
+	e.Use(middleware.CSRFWithConfig(middleware.CSRFConfig{
+		Skipper: func(c echo.Context) bool {
+			// Return true to skip CSRF protection for certain routes or requests
+			// For example:
+			// return c.Request().Method == http.MethodGet // Skip CSRF for GET requests
+			return true // Skip CSRF for all requests (use with caution)
+		},
+	}))
 	var userAPI = new(user.UserAPI)
 	userAPI.ConDB = db
 	//USER RELATED ENDPOINTS
 	e.POST("/user/login", userAPI.UserLoginHandler) //public endpoint
+
 	e.GET("/", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Hello, World!")
 	})
@@ -59,6 +69,7 @@ func main() {
 	r.Use(AuthenticateAPIV2)
 	r.POST("/user/create", userAPI.UserCreateHandler)
 	r.GET("/user/list-all", userAPI.ListAllUserHandler)
+	r.DELETE("/user/delete/:userId", userAPI.UserDeleteHandler)
 
 	e.Logger.Fatal(e.Start(":1323"))
 }

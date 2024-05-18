@@ -2,6 +2,7 @@ package user
 
 import (
 	"0x4E43/email-app-be/cache"
+	"0x4E43/email-app-be/global"
 	"database/sql"
 	"encoding/json"
 	"log"
@@ -12,12 +13,6 @@ import (
 
 type UserAPI struct {
 	ConDB *sql.DB
-}
-
-type Response struct {
-	Message string `json:"message"`
-	Status  int    `json:"status"`
-	Data    any    `json:"data"`
 }
 
 func (userApi *UserAPI) UserCreateHandler(c echo.Context) error {
@@ -36,6 +31,7 @@ func (userApi *UserAPI) UserCreateHandler(c echo.Context) error {
 func (userApi *UserAPI) UserLoginHandler(c echo.Context) error {
 	var user = User{}
 	if err := json.NewDecoder(c.Request().Body).Decode(&user); err != nil {
+		log.Println("Error: ", err.Error())
 		return c.String(http.StatusForbidden, "Something went wrong") // Handle error if any
 	}
 	log.Println("UserName: ", user.EmailId, " Pass: ", user.Password)
@@ -58,7 +54,12 @@ func (userApi *UserAPI) UserLoginHandler(c echo.Context) error {
 	//set up cache for authorization
 	userEmail := dbUser.EmailId
 	cache.AddUserToCache(userEmail)
-	return c.JSON(http.StatusOK, map[string]string{"token": *token})
+	res := global.Response{
+		Status:  http.StatusOK,
+		Message: "Login Success",
+		Data:    map[string]string{"token": *token},
+	}
+	return c.JSON(res.Status, res)
 }
 
 // func (userApi *UserAPI) ListAllUserHandler(c echo.Context) error {
@@ -87,12 +88,25 @@ func (userApi *UserAPI) ListAllUserHandler(c echo.Context) error {
 
 	log.Println("Size of user List:", len(userList))
 
-	var res = Response{
+	var res = global.Response{
 		Message: "User list successful",
 		Status:  http.StatusOK,
 		Data:    userList,
 	}
 
 	// Send the response
-	return c.JSON(http.StatusOK, res)
+	return c.JSON(res.Status, res)
+}
+
+func (userApi *UserAPI) UserDeleteHandler(c echo.Context) error {
+	userId := c.Param("userId")
+	res := global.Response{}
+	if userId == "" {
+		res.Status = http.StatusBadRequest
+		res.Message = "userId id not found"
+		res.Data = nil
+	} else {
+		res.Message = "Method not yet implemented"
+	}
+	return c.JSON(res.Status, res)
 }

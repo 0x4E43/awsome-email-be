@@ -12,7 +12,7 @@ import (
 )
 
 type User struct {
-	Id        string    `json:"id,omitempty"`
+	Id        int       `json:"id,omitempty"`
 	EmailId   string    `json:"emailId"`
 	Password  string    `json:"password"`
 	CreatedAt time.Time `json:"created_at"`
@@ -58,19 +58,18 @@ func (user *User) CheckIfUserExist(db *sql.DB) (*User, error) {
 }
 
 func (user *User) ListAllUser(db *sql.DB) ([]User, error) {
-	sqlQuery := `SELECT email, created_at FROM user_details`
+	sqlQuery := `SELECT id, email, created_at FROM user_details`
 
 	rows, err := db.Query(sqlQuery)
-
-	defer rows.Close()
 
 	var userList []User
 	if err != nil {
 		log.Println("Something went wrong while executing query: ", err.Error())
 	}
+	defer rows.Close()
 	for rows.Next() {
 		var dbUser User
-		if err := rows.Scan(&dbUser.EmailId, &dbUser.CreatedAt); err != nil {
+		if err := rows.Scan(&dbUser.Id, &dbUser.EmailId, &dbUser.CreatedAt); err != nil {
 			log.Println("Error scanning row: ", err.Error())
 			return nil, err
 		}
