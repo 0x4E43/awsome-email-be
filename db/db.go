@@ -2,6 +2,7 @@ package db
 
 import (
 	"database/sql"
+	"log"
 )
 
 type DBCon struct {
@@ -14,6 +15,7 @@ func (d *DBCon) CreateRequiredTables() error {
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		email VARCHAR(100),
 		password VARCHAR(50),
+		user_type INTEGER,
 		created_at TIMESTAMP
 	);`)
 
@@ -22,16 +24,19 @@ func (d *DBCon) CreateRequiredTables() error {
 		smtp_host VARCHAR(50),
 		smtp_pass VARCHAR(100),
 		smtp_from VARCHAR(100),
-		is_default boolean,
+		is_default BOOLEAN,
 		created_at TIMESTAMP
 	);`)
 
-	sqls = append(sqls, ` INSERT INTO user_details(id, email, password, created_at)
-		SELECT 1, 'talk2nimai@gmail.com','$2a$10$BH5Ya0R/NefDs58YEkg7Vu/CO6tnbgKKKhOjuG4nbtmaH7QKtztOG', CURRENT_TIMESTAMP
+	sqls = append(sqls, ` INSERT INTO user_details(id, email, password, created_at, user_type)
+		SELECT 1, 'talk2nimai@gmail.com','$2a$10$BH5Ya0R/NefDs58YEkg7Vu/CO6tnbgKKKhOjuG4nbtmaH7QKtztOG', CURRENT_TIMESTAMP, 1
 		WHERE NOT EXISTS (SELECT 1 FROM user_details WHERE id=1);`)
 	for _, query := range sqls {
+		log.Println(query)
 		_, err := d.DB.Exec(query)
 		if err != nil {
+			log.Printf("%+v", err)
+			log.Println(err.Error())
 			return err
 		}
 	}

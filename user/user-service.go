@@ -11,22 +11,29 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// user role enum
+const (
+	ADMIN = 0
+	TEST  = 1
+)
+
 type User struct {
 	Id        int       `json:"id,omitempty"`
 	EmailId   string    `json:"emailId"`
 	Password  string    `json:"password"`
+	UserType  int       `json:"userType"`
 	CreatedAt time.Time `json:"created_at"`
 }
 
 func (user *User) createUser(db *sql.DB) (*User, error) {
 	log.Println("Adding user to DB")
-	var insertQuery = `INSERT INTO user_details (id, email, password, created_at)
-		VALUES(NULL,$1, $2, CURRENT_TIMESTAMP)`
+	var insertQuery = `INSERT INTO user_details (id, email, password, created_at, user_type)
+		VALUES(NULL,$1, $2, $3, CURRENT_TIMESTAMP)`
 	enc_pass, err := user.Encrypt_password()
 	if err != nil {
 		return nil, err
 	}
-	row, err := db.Query(insertQuery, user.EmailId, enc_pass)
+	row, err := db.Query(insertQuery, user.EmailId, enc_pass, user.UserType)
 	if err != nil {
 		log.Println("Exception while adding user: ", err.Error())
 		return nil, err
@@ -42,7 +49,7 @@ func (user *User) createUser(db *sql.DB) (*User, error) {
 }
 
 func (user *User) CheckIfUserExist(db *sql.DB) (*User, error) {
-	userQuery := `SELECT email, password FROM user_details WHERE email = $1`
+	userQuery := `SELECT email, password, user_type FROM user_details WHERE email = $1`
 	rows, err := db.Query(userQuery, user.EmailId)
 	if err != nil {
 		log.Println("Something went wrong while geting user: ", err.Error())
@@ -58,7 +65,7 @@ func (user *User) CheckIfUserExist(db *sql.DB) (*User, error) {
 }
 
 func (user *User) ListAllUser(db *sql.DB) ([]User, error) {
-	sqlQuery := `SELECT id, email, created_at FROM user_details`
+	sqlQuery := `SELECT id, email, created_at, user_type FROM user_details`
 
 	rows, err := db.Query(sqlQuery)
 
@@ -69,7 +76,7 @@ func (user *User) ListAllUser(db *sql.DB) ([]User, error) {
 	defer rows.Close()
 	for rows.Next() {
 		var dbUser User
-		if err := rows.Scan(&dbUser.Id, &dbUser.EmailId, &dbUser.CreatedAt); err != nil {
+		if err := rows.Scan(&dbUser.Id, &dbUser.EmailId, &dbUser.CreatedAt, &dbUser.UserType); err != nil {
 			log.Println("Error scanning row: ", err.Error())
 			return nil, err
 		}
