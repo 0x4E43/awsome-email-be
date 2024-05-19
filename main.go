@@ -4,19 +4,27 @@ import (
 	awmail "0x4E43/email-app-be/aw-mail"
 	cache "0x4E43/email-app-be/cache"
 	db_utils "0x4E43/email-app-be/db"
+	"0x4E43/email-app-be/logger"
 	user "0x4E43/email-app-be/user"
 	"database/sql"
-	"log"
 	"net/http"
 	"strings"
 
+	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	_ "github.com/mattn/go-sqlite3" // Import go-sqlite3 library
 )
 
-func main() {
+// Custom logger
+var log = logger.Log
 
+func main() {
+	//load env variables
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Failed to read env file")
+	}
 	var server = db_utils.DBCon{}
 	db, err := sql.Open("sqlite3", "./db/email.db")
 	if err != nil {
@@ -29,16 +37,20 @@ func main() {
 	if err := server.CreateRequiredTables(); err != nil {
 		log.Panic("Failed to create tables : ", err.Error())
 	}
-	defer db.Close()
 
 	cache.LoadUserCache(db)
+	defer db.Close()
+	err = db.Ping()
+	if err != nil {
+		log.Fatal("Failed to connect DB")
+	}
 	// defer close
-	log.Println("DB Connected: ", db)
+	log.Println("DB connected successfully")
 	e := echo.New()
 
-	e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
-		Format: "${time_unix} ${remote_ip} ${method} ${uri} ${status}\n",
-	}))
+	// e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
+	// 	Format: "${time_unix} ${remote_ip} ${method} ${uri} ${status}\n",
+	// }))
 
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins: []string{"*", "http://localhost:5173"},

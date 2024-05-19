@@ -27,7 +27,7 @@ type User struct {
 
 func (user *User) createUser(db *sql.DB) (*User, error) {
 	log.Println("Adding user to DB")
-	var insertQuery = `INSERT INTO user_details (id, email, password, created_at, user_type)
+	var insertQuery = `INSERT INTO user_details (id, email, password, user_type, created_at)
 		VALUES(NULL,$1, $2, $3, CURRENT_TIMESTAMP)`
 	enc_pass, err := user.Encrypt_password()
 	if err != nil {

@@ -1,2 +1,6 @@
 **/*.db
 bin/
+.env
+*.log
+db/email.db
+go.sum
