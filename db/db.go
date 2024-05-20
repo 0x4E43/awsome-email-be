@@ -71,7 +71,7 @@ func (d *DBCon) CreateRequiredTables() error {
 			log.Fatal(err.Error())
 			return err
 		}
-		log.Println("Query Executed: ", query)
+		// log.Println("Query Executed: ", query)
 	}
 	return nil
 }

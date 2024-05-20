@@ -3,6 +3,7 @@ package awmail
 import (
 	"database/sql"
 	"net/smtp"
+	"regexp"
 	"strconv"
 
 	"github.com/jordan-wright/email"
@@ -17,13 +18,13 @@ type EmailConfig struct {
 }
 
 type Email struct {
-	To       string `json:"to"`
+	To       string `json:"toAddress"`
 	Subject  string `json:"subject"`
-	Body     string `json:"body"`
+	Body     string `json:"mailBody"`
 	MailType int    `json:"mailType"`
 }
 
-func (email *Email) SendTestEmail(db *sql.DB) {
+func (email *Email) SendTestEmail(db *sql.DB) error {
 	// find user from user details where usertype = 1
 
 	sqlQuery := "SELECT email FROM user_details WHERE user_type = 0"
@@ -44,8 +45,8 @@ func (email *Email) SendTestEmail(db *sql.DB) {
 		userList = append(userList, email)
 	}
 
-	email.sendEmail(userList, db)
 	log.Printf("Hello Test EMail {%v}", userList)
+	return email.sendEmail(userList, db)
 }
 
 func (cMail *Email) sendEmail(contacts []string, db *sql.DB) error {
@@ -68,7 +69,8 @@ func (cMail *Email) sendEmail(contacts []string, db *sql.DB) error {
 
 	//send email
 	em := email.NewEmail()
-
+	contacts = *getValidEmails(contacts)
+	log.Println("Contacts: ", getValidEmails(contacts), " Size", len(contacts))
 	em.From = emailConfig.SmtpFrom
 	em.To = contacts
 	em.Subject = cMail.Subject
@@ -78,8 +80,26 @@ func (cMail *Email) sendEmail(contacts []string, db *sql.DB) error {
 	log.Printf("{%+v}", emailConfig)
 	if err != nil {
 		log.Println("Something went wrong while sending email ", err.Error())
+		// log.Panicf("{%+v}", err)
 		return err
 	}
 	log.Println("Email sent successfully")
 	return nil
+}
+
+func getValidEmails(contacts []string) *[]string {
+	// Regular expression for email validation
+	emailRegex := `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`
+
+	// Compile the regex pattern
+	regex := regexp.MustCompile(emailRegex)
+
+	// Check if the email matches the regex pattern
+	var emailList []string
+	for _, email := range contacts {
+		if regex.MatchString(email) {
+			emailList = append(emailList, email)
+		}
+	}
+	return &emailList
 }
