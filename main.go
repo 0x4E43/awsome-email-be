@@ -66,8 +66,13 @@ func main() {
 			return true // Skip CSRF for all requests (use with caution)
 		},
 	}))
+
+	//TODO: Optimize this and find a way to use context
 	var userAPI = new(user.UserAPI)
 	userAPI.ConDB = db
+
+	var emailDBConfig = new(awmail.EmailDBConfig)
+	emailDBConfig.ConDB = db
 	//USER RELATED ENDPOINTS
 	e.POST("/user/login", userAPI.UserLoginHandler) //public endpoint
 
@@ -75,13 +80,15 @@ func main() {
 		return c.String(http.StatusOK, "Hello, World!")
 	})
 
-	e.POST("/send-email", awmail.EmailSenderHandler)
 	// restricted endpoints
 	r := e.Group("/app")
 	r.Use(AuthenticateAPIV2)
 	r.POST("/user/create", userAPI.UserCreateHandler)
 	r.GET("/user/list-all", userAPI.ListAllUserHandler)
 	r.DELETE("/user/delete/:userId", userAPI.UserDeleteHandler)
+
+	// email specific endpoints
+	r.POST("/email/send", emailDBConfig.EmailSenderHandler)
 
 	e.Logger.Fatal(e.Start(":1323"))
 }

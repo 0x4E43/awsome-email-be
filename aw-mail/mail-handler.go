@@ -1,23 +1,43 @@
 package awmail
 
 import (
+	"0x4E43/email-app-be/global"
+	"0x4E43/email-app-be/logger"
+	"database/sql"
 	"encoding/json"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
 )
 
-var EmailBody struct{
-	To string`json:"to"`
-	From string `json:"from"`
+type EmailDBConfig struct {
+	ConDB *sql.DB
 }
 
-func EmailSenderHandler(c echo.Context) error{
+// Custom logger
+var log = logger.Log
+
+func (emailDBConfig *EmailDBConfig) EmailSenderHandler(c echo.Context) error {
+	var emailBody Email
 	//get the body
 	// var body = c.Request().Body
-	if err := json.NewDecoder(c.Request().Body).Decode(&EmailBody); err != nil {
-        return err // Handle error if any
-    }
-    println("{} {}", EmailBody.To, EmailBody.From)
-    return c.String(http.StatusOK, "Hello Email")
+	if err := json.NewDecoder(c.Request().Body).Decode(&emailBody); err != nil {
+		log.Println(err.Error())
+		res := global.PrepareResponse("Invalid data", http.StatusBadRequest, nil)
+		return c.JSON(res.Status, res)
+	}
+	log.Printf("%+v", emailBody)
+	if emailBody.MailType == 1 && (&emailBody.To == nil || emailBody.To == "") {
+		log.Println("TO is required for normal email")
+		res := global.PrepareResponse("Invalid data", http.StatusBadRequest, nil)
+		return c.JSON(res.Status, res)
+	}
+
+	if emailBody.MailType == 0 {
+		emailBody.SendTestEmail(emailDBConfig.ConDB)
+	}
+	println("{} {}", emailBody.To, emailBody.MailType)
+
+	return c.String(http.StatusOK, "Hello Email")
 }
+
