@@ -90,6 +90,9 @@ func main() {
 	// email specific endpoints
 	r.POST("/email/send", emailDBConfig.EmailSenderHandler)
 
+	//email config related endpoints
+	r.POST("/email/config/add", emailDBConfig.AddEmailConfigHandler)
+
 	e.Logger.Fatal(e.Start(":1323"))
 }
 

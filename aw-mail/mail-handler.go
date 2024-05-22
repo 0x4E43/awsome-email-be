@@ -63,3 +63,27 @@ func (emailDBConfig *EmailDBConfig) EmailSenderHandler(c echo.Context) error {
 
 	return c.JSON(res.Status, res)
 }
+
+func (emailDbConfig *EmailDBConfig) AddEmailConfigHandler(c echo.Context) error {
+	//check if all fields are there orn not
+	var emailConfig EmailConfig
+
+	if err := json.NewDecoder(c.Request().Body).Decode(&emailConfig); err != nil {
+		log.Println("Error while decoding response body")
+		res := global.PrepareResponse("Something went wrong", http.StatusInternalServerError, nil)
+		return c.JSON(res.Status, res)
+	}
+
+	if emailConfig.SmtpFrom == "" || emailConfig.SmtpHOST == "" || emailConfig.SmtpPass == "" || emailConfig.SmtpPort == 0 {
+		log.Println("Not all the fields are provided in the request")
+		res := global.PrepareResponse("Please provide all the fields", http.StatusBadRequest, nil)
+		return c.JSON(res.Status, res)
+	}
+	newEmailConfig, err := emailConfig.AddNewEmailConfig(emailDbConfig.ConDB)
+	if err != nil {
+		res := global.PrepareResponse("Something went wrong", http.StatusInternalServerError, nil)
+		return c.JSON(res.Status, res)
+	}
+	res := global.PrepareResponse("Email config saved successfully", http.StatusOK, *newEmailConfig)
+	return c.JSON(res.Status, res)
+}

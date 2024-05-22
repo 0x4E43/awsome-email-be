@@ -10,6 +10,7 @@ import (
 )
 
 type EmailConfig struct {
+	Id        string `json:"id"`
 	SmtpHOST  string `json:"smtpHost"`
 	SmtpPass  string `json:"smtpPass"`
 	SmtpPort  int    `json:"smtpPort"`
@@ -102,4 +103,28 @@ func getValidEmails(contacts []string) *[]string {
 		}
 	}
 	return &emailList
+}
+
+func (emailConfig *EmailConfig) AddNewEmailConfig(db *sql.DB) (*EmailConfig, error) {
+	if emailConfig.IsDefault {
+		query := "UPDATE email_configs SET is_default = 0 WHERE is_default =1"
+		_, err := db.Exec(query)
+		if err != nil {
+			log.Println("Error while setting defaults for emailconfig ", err.Error())
+			return nil, err
+		}
+	}
+
+	query := `INSERT INTO email_configs (smtp_host, smtp_pass, smtp_port, smtp_from, is_default, created_at) 
+			 VALUES($1, $2, $3, $4, $5, CURRENT_TIMESTAMP)  RETURNING id;`
+	result, err := db.Exec(query, emailConfig.SmtpHOST, emailConfig.SmtpPass, emailConfig.SmtpPort, emailConfig.SmtpFrom, emailConfig.IsDefault)
+
+	if err != nil {
+		log.Println("Error while writing data into DB ", err.Error())
+		return nil, err
+	}
+
+	id, _ := result.LastInsertId()
+	emailConfig.Id = strconv.FormatInt(id, 10)
+	return emailConfig, nil
 }
