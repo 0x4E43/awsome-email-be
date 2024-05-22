@@ -106,8 +106,9 @@ func (userApi *UserAPI) UserDeleteHandler(c echo.Context) error {
 		res := global.PrepareResponse("UserId is required", http.StatusBadRequest, res)
 		return c.JSON(res.Status, res)
 	} else {
-		if userId == 0 {
-			res.Message = "User can't be deleted"
+		if userId == 1 {
+			res := global.PrepareResponse("User cant be deleted", http.StatusBadRequest, nil)
+			return c.JSON(res.Status, res)
 		}
 		var user = User{}
 		err := user.DeleteUser(userApi.ConDB, userId)

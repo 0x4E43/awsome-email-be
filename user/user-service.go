@@ -88,7 +88,7 @@ func (user *User) ListAllUser(db *sql.DB) ([]User, error) {
 }
 
 func (user *User) DeleteUser(db *sql.DB, userId int) error {
-	sqlQuery := "DELETE FROM user_details where id" + strconv.Itoa(userId)
+	sqlQuery := "DELETE FROM user_details where id = " + strconv.Itoa(userId)
 
 	_, err := db.Exec(sqlQuery)
 	if err != nil {
