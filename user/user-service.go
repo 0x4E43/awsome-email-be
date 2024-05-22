@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"log"
+	"strconv"
 	"strings"
 	"time"
 
@@ -84,6 +85,17 @@ func (user *User) ListAllUser(db *sql.DB) ([]User, error) {
 	}
 	println("Size of user List ", len(userList))
 	return userList, nil
+}
+
+func (user *User) DeleteUser(db *sql.DB, userId int) error {
+	sqlQuery := "DELETE FROM user_details where id" + strconv.Itoa(userId)
+
+	_, err := db.Exec(sqlQuery)
+	if err != nil {
+		log.Println("Error while deleting user ", err.Error())
+		return err
+	}
+	return nil
 }
 
 // Security Related Utility Method

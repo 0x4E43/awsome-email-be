@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/labstack/echo/v4"
 )
@@ -99,14 +100,22 @@ func (userApi *UserAPI) ListAllUserHandler(c echo.Context) error {
 }
 
 func (userApi *UserAPI) UserDeleteHandler(c echo.Context) error {
-	userId := c.Param("userId")
+	userId, _ := strconv.Atoi(c.Param("userId"))
 	res := global.Response{}
-	if userId == "" {
-		res.Status = http.StatusBadRequest
-		res.Message = "userId id not found"
-		res.Data = nil
+	if userId == 0 {
+		res := global.PrepareResponse("UserId is required", http.StatusBadRequest, res)
+		return c.JSON(res.Status, res)
 	} else {
-		res.Message = "Method not yet implemented"
+		if userId == 0 {
+			res.Message = "User can't be deleted"
+		}
+		var user = User{}
+		err := user.DeleteUser(userApi.ConDB, userId)
+		if err != nil {
+			resp := global.PrepareResponse("Something went wrong while deleting user", http.StatusInternalServerError, nil)
+			return c.JSON(resp.Status, resp)
+		}
+		res := global.PrepareResponse("User deleted successfully", http.StatusOK, nil)
+		return c.JSON(res.Status, res)
 	}
-	return c.JSON(res.Status, res)
 }
