@@ -21,6 +21,11 @@ func (userApi *UserAPI) UserCreateHandler(c echo.Context) error {
 	if err := json.NewDecoder(c.Request().Body).Decode(&user); err != nil {
 		return c.String(http.StatusForbidden, "Something went wrong") // Handle error if any
 	}
+	dbUser, err := user.checkUserExistsByEmailAndUserType(userApi.ConDB)
+	if dbUser != nil {
+		res := global.PrepareResponse("User already exists", http.StatusOK, nil)
+		return c.JSON(res.Status, res)
+	}
 	log.Println("UserName: ", user.EmailId, " Pass: ", user.Password)
 	added_user, err := user.createUser(userApi.ConDB)
 	if err != nil {

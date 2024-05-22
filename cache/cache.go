@@ -1,8 +1,8 @@
 package cache
 
 import (
+	"0x4E43/email-app-be/logger"
 	"database/sql"
-	"log"
 	"sync"
 )
 
@@ -19,6 +19,8 @@ func init() {
 	// Initialize the cache
 	Cache = make(UserCache)
 }
+
+var log = logger.Log
 
 // AddUser adds a user to the cache
 func AddUserToCache(email string) {
@@ -39,7 +41,7 @@ func LoadUserCache(db *sql.DB) {
 	rows, err := db.Query(sqlQuery)
 	defer rows.Close()
 	if err != nil {
-		log.Panic("Unable to get user Cache")
+		log.Panic("Unable to get user Cache", err)
 	}
 	for rows.Next() {
 		var email string

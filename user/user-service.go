@@ -14,8 +14,8 @@ import (
 
 // user role enum
 const (
-	ADMIN = 0
-	TEST  = 1
+	ADMIN = 1
+	TEST  = 0
 )
 
 type User struct {
@@ -28,13 +28,19 @@ type User struct {
 
 func (user *User) createUser(db *sql.DB) (*User, error) {
 	log.Println("Adding user to DB")
-	var insertQuery = `INSERT INTO user_details (id, email, password, user_type, created_at)
-		VALUES(NULL,$1, $2, $3, CURRENT_TIMESTAMP)`
-	enc_pass, err := user.Encrypt_password()
-	if err != nil {
-		return nil, err
+	if user.UserType == ADMIN {
+		pass, err := user.Encrypt_password()
+		if err != nil {
+			return nil, err
+		}
+		user.Password = *pass
 	}
-	row, err := db.Query(insertQuery, user.EmailId, enc_pass, user.UserType)
+
+	log.Println("User", user)
+	insertQuery := `INSERT INTO user_details (id, email, password, user_type, created_at)
+		VALUES(NULL,$1, $2, $3, CURRENT_TIMESTAMP)`
+
+	row, err := db.Query(insertQuery, user.EmailId, user.Password, user.UserType)
 	if err != nil {
 		log.Println("Exception while adding user: ", err.Error())
 		return nil, err
@@ -49,8 +55,32 @@ func (user *User) createUser(db *sql.DB) (*User, error) {
 	return user, nil
 }
 
+func (user *User) checkUserExistsByEmailAndUserType(db *sql.DB) (*User, error) {
+	dbUser := User{}
+	log.Println(user)
+	userQuery := `SELECT email FROM user_details WHERE email = $1 AND user_type = $2 LIMIT 1`
+	rows, err := db.Query(userQuery, user.EmailId, user.UserType)
+	defer rows.Close()
+
+	if err != nil {
+		log.Println("Something went wrong while checking user", err.Error())
+		return nil, err
+	}
+	if rows.Next() {
+		err := rows.Scan(&dbUser.EmailId)
+		if err != nil {
+			log.Println("Error while scanning row:", err)
+			return nil, err
+		}
+		log.Println("User found:", dbUser)
+		return &dbUser, nil
+	}
+	log.Println("DB user: ", dbUser)
+	return nil, nil
+}
+
 func (user *User) CheckIfUserExist(db *sql.DB) (*User, error) {
-	userQuery := `SELECT email, password, user_type FROM user_details WHERE email = $1`
+	userQuery := `SELECT email FROM user_details WHERE email = $1`
 	rows, err := db.Query(userQuery, user.EmailId)
 	if err != nil {
 		log.Println("Something went wrong while geting user: ", err.Error())
