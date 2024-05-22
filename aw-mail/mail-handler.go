@@ -79,7 +79,12 @@ func (emailDbConfig *EmailDBConfig) AddEmailConfigHandler(c echo.Context) error 
 		res := global.PrepareResponse("Please provide all the fields", http.StatusBadRequest, nil)
 		return c.JSON(res.Status, res)
 	}
-	newEmailConfig, err := emailConfig.AddNewEmailConfig(emailDbConfig.ConDB)
+	newEmailConfig, err := emailConfig.checkIfConfigHostExists(emailDbConfig.ConDB)
+	if newEmailConfig != nil {
+		res := global.PrepareResponse("Email config with same host already exists", http.StatusOK, nil)
+		return c.JSON(res.Status, res)
+	}
+	newEmailConfig, err = emailConfig.AddNewEmailConfig(emailDbConfig.ConDB)
 	if err != nil {
 		res := global.PrepareResponse("Something went wrong", http.StatusInternalServerError, nil)
 		return c.JSON(res.Status, res)

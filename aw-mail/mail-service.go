@@ -128,3 +128,23 @@ func (emailConfig *EmailConfig) AddNewEmailConfig(db *sql.DB) (*EmailConfig, err
 	emailConfig.Id = strconv.FormatInt(id, 10)
 	return emailConfig, nil
 }
+
+func (emailConfig *EmailConfig) checkIfConfigHostExists(db *sql.DB) (*EmailConfig, error) {
+	query := "SELECT smtp_host FROM email_configs WHERE smtp_host = $1 LIMIT 1"
+	row, err := db.Query(query, emailConfig.SmtpHOST)
+	defer row.Close()
+
+	if err != nil {
+		log.Println("Something went wrong ", err.Error())
+		return nil, err
+	}
+	tempConfig := EmailConfig{}
+	for row.Next() {
+		if err := row.Scan(&tempConfig.SmtpHOST); err != nil {
+			log.Println("Something went wrong while scan ", err.Error())
+			return nil, err
+		}
+		return &tempConfig, nil
+	}
+	return nil, nil
+}
